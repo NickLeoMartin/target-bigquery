@@ -90,6 +90,8 @@ def define_schema(field, name):
 
     if schema_type == "object":
         schema_type = "RECORD"
+        # Debugging
+        logger.info('object field: {}'.format(field))
         schema_fields = tuple(build_schema(field))
 
     if schema_type == "array":
@@ -114,7 +116,16 @@ def define_schema(field, name):
 
 
 def build_schema(schema):
+    # Debugging
+    # logger.info('Schema: {}'.format(schema))
+    # logger.info('Schema keys: {}'.format(schema.keys()))
+    # logger.info('Schema properties keys: {}'.format(schema['properties'].keys()))
+
     SCHEMA = []
+
+    # Debugging
+    field_types = []
+
     for key in schema['properties'].keys():
 
         if not (bool(schema['properties'][key])):
@@ -126,11 +137,31 @@ def build_schema(schema):
                 field=schema['properties'][key],
                 name=key)
 
+        # log_message = 'schema output: {}, {}, {}, {}, {}'.format(
+        #     schema_name,
+        #     schema_type,
+        #     schema_mode,
+        #     schema_description,
+        #     schema_fields)
+
+        # logger.info(log_message)
+
         SCHEMA.append(SchemaField(schema_name,
                                   schema_type,
                                   schema_mode,
                                   schema_description,
                                   schema_fields))
+
+        if schema_type is None:
+            logger.info('schema type: schema_name={}, type={}'.format(
+                schema_name,
+                schema_type))
+
+        # Debugging
+        field_types.append(schema_type)
+
+    # Debugging
+    logger.info('Unique schema types: {}'.format(set(field_types)))
 
     return SCHEMA
 
@@ -243,7 +274,15 @@ def persist_lines_job(project_id,
     for table in rows.keys():
         table_ref = bigquery_client.dataset(dataset_id).table(table)
 
+        # Debug
+        logger.info('*********************')
+        logger.info(table)
+        # logger.info(schemas[table])
+
         SCHEMA = build_schema(schemas[table])
+
+        # logger.info('schema: {}'.format(SCHEMA))
+
         load_config = LoadJobConfig()
 
         load_config.schema = SCHEMA
